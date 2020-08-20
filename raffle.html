@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>抽奖</title>
+        <style>
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                font-family: "Microsoft Yahei";
+                background-color: bisque;
+            }
+            .range-box,
+            .num-box,
+            .start-btn {
+                position: fixed;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                margin: auto;
+            }
+            .range-box,
+            .num-box {
+                width: 80vw;
+                height: 20vh;
+                line-height: 20vh;
+                text-align: center;
+                font-size: 14vh;
+                display: block;
+            }
+            .range-box {
+                line-height: normal;
+                font-size: 6vh;
+            }
+            .range-ipt {
+                display: inline-block;
+                vertical-align: middle;
+                width: 30vw;
+                line-height: 10vh;
+                text-align: center;
+                font-size: 6vh;
+            }
+            .num-box {
+                width: 50vw;
+                display: none;
+            }
+            @keyframes raffle {
+                0%,
+                100% {
+                    background-color: transparent;
+                }
+                30%,
+                70% {
+                    background-color: white;
+                }
+            }
+            .mask {
+                position: fixed;
+                display: none;
+                z-index: 999;
+                width: 100%;
+                height: 100%;
+                left: 0;
+                top: 0;
+                background-color: transparent;
+                transition: background-color 0.2s ease;
+            }
+            .mask.raffle {
+                display: block;
+                animation: raffle 2s linear;
+            }
+            .start-btn {
+                width: 90vw;
+                height: 8vh;
+                font-size: 4vh;
+                bottom: 3vh;
+                top: auto;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="mask" id="mask"></div>
+        <div class="range-box" id="rangeBox">
+            <label style="font-size: 4vh; line-height: 8vh;"
+                >输入抽奖号码范围</label
+            >
+            <br />
+            <input
+                type="text"
+                oninput="value=value.replace(/[^\d]/g,'')"
+                class="range-ipt"
+                id="startIpt"
+            />
+            -
+            <input
+                type="text"
+                oninput="value=value.replace(/[^\d]/g,'')"
+                class="range-ipt"
+                id="endIpt"
+            />
+        </div>
+        <div class="num-box" id="numBox">---</div>
+        <button class="start-btn" id="startBtn">确认</button>
+        <script type="text/javascript">
+            window.range = null;
+            window.count = 0;
+
+            let btn = document.getElementById("startBtn");
+            // 根据范围生成数组
+            function rangeArray(start, end) {
+                start = parseInt(start);
+                end = parseInt(end);
+                let rangeArr = [];
+                for (let i = start; i <= end; i++) {
+                    rangeArr.push(i);
+                }
+                return rangeArr;
+            }
+
+            // 输入范围
+            function inputRange() {
+                let startVal = document.getElementById("startIpt").value;
+                let endVal = document.getElementById("endIpt").value;
+                if (startVal >= endVal) {
+                    alert("开始值不能小于结束值");
+                    return;
+                }
+                window.range = rangeArray(startVal, endVal);
+                let rangeBoxDom = document.getElementById("rangeBox");
+                rangeBoxDom.style.display = "none";
+                let numBoxDom = document.getElementById("numBox");
+                numBoxDom.style.display = "block";
+                btn.innerText = "抽奖";
+                console.log("奖池为：", window.range);
+            }
+
+            // 抽奖方法
+            function raffle() {
+                btn.disabled = true; // 禁用按钮，防抖
+                if (window.range.length <= 0) {
+                    alert("所有号码都抽过了");
+                    btn.disabled = false;
+                    return;
+                }
+                let dom = document.getElementById("numBox");
+                let maskDom = document.getElementById("mask");
+                let randomIndex = 0;
+                let interval = setInterval(function () {
+                    randomIndex = Math.floor(
+                        Math.random() * window.range.length
+                    ); // 随机生成 0 - 奖池大小的 下标
+                    dom.innerText = window.range[randomIndex];
+                }, 10);
+                setTimeout(function () {
+                    maskDom.className = "mask raffle";
+                    setTimeout(function () {
+                        maskDom.className = "mask";
+                    }, 2000);
+                }, 2000);
+                setTimeout(function () {
+                    clearInterval(interval);
+                    window.count += 1;
+                    console.log(
+                        "抽奖结果：" +
+                            window.range[randomIndex] +
+                            "，已抽奖次数：" +
+                            window.count
+                    );
+                    window.range.splice(randomIndex, 1); // 从奖池移除本次抽奖号码
+                    console.log("剩余奖池", window.range);
+                    btn.disabled = false;
+                }, 3000);
+            }
+
+            // 按钮点击事件
+            btn.addEventListener("click", function () {
+                if (window.range) {
+                    raffle();
+                } else {
+                    inputRange();
+                }
+            });
+        </script>
+    </body>
+</html>
